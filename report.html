@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Report</title>
+</head>
+<body>
+    <h1>Expense Report</h1>
+    <div id="reportContainer"></div>
+    <script>
+        // Parse the query string to get the report data
+        const params = new URLSearchParams(window.location.search);
+        const reportData = JSON.parse(params.get('reportData'));
+
+        const reportContainer = document.getElementById('reportContainer');
+        reportContainer.innerHTML = '';
+        reportData.forEach(categoryData => {
+            const categoryHeader = document.createElement('h3');
+            categoryHeader.textContent = `${categoryData.category} Expenses`;
+            reportContainer.appendChild(categoryHeader);
+            const categoryTable = document.createElement('table');
+            categoryTable.innerHTML = `
+                <tr>
+                    <th>Expense</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Receipt</th>
+                </tr>
+            `;
+            categoryData.expenses.forEach(expense => {
+                const row = `
+                    <tr>
+                        <td>${expense.expense}</td>
+                        <td>${expense.amount}</td>
+                        <td>${expense.date}</td>
+                        <td>${expense.time}</td>
+                        <td><a href="${expense.receiptPath}" target="_blank">View Receipt</a></td>
+                    </tr>
+                `;
+                categoryTable.insertAdjacentHTML('beforeend', row);
+            });
+            reportContainer.appendChild(categoryTable);
+        });
+    </script>
+</body>
+</html>

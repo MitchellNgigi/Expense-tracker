@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Expenses</title>
+    <link rel="stylesheet" href="Expenses css.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Expenses</h1>
+    <form id="addExpenseForm" enctype="multipart/form-data" action="upload.php" method="POST">
+        <label for="category">Category:</label>
+        <select id="category" required>
+            <!-- Categories will be populated dynamically -->
+        </select>
+        <label for="expense">Expense:</label>
+        <input type="text" id="expense" placeholder="Expense Description" required>
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" placeholder="Amount" required>
+        <label for="mpesaCode">Mpesa Code:</label>
+        <input type="text" id="mpesaCode" placeholder="Mpesa Code" required>
+        <label for="receipt">Receipt:</label>
+        <input type="file" id="receipt" accept="image/*" capture="environment">
+        <button type="button" id="addExpenseBtn">Add Expense</button>
+    </form>
+    <button id="generateReportBtn">Generate Report</button>
+    <table id="expenses">
+        <tr>
+            <th>Category</th>
+            <th>Expense</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Mpesa Code</th>
+            <th>Receipt</th>
+            <th>Balance Remaining</th>
+        </tr>
+    </table>
+    <canvas id="reportChart" width="400" height="200"></canvas>
+    <script>
+        const addExpenseForm = document.getElementById('addExpenseForm');
+        const expensesTable = document.getElementById('expenses');
+        const categories = JSON.parse(localStorage.getItem('categories')) || [];
+        let totalExpenses = 0;
+
+        // Add event listener to the form's Add Expense button
+        document.getElementById('addExpenseBtn').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            const category = document.getElementById('category').value;
+            const expense = document.getElementById('expense').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const mpesaCode = document.getElementById('mpesaCode').value;
+            
+            // Find the category object
+            const categoryObj = categories.find(cat => cat.name === category);
+            if (!categoryObj) {
+                alert('Category not found');
+                return;
+            }
+
+            // Check if the expense exceeds the budget
+            if (amount > categoryObj.budget - totalExpenses) {
+                alert('Expense exceeds budget');
+                return;
+            }
+
+            // Create a new row
+            const newRow = expensesTable.insertRow(-1); // -1 to insert at the end
+            newRow.insertCell(0).textContent = category;
+            newRow.insertCell(1).textContent = expense;
+            newRow.insertCell(2).textContent = amount.toFixed(2);
+            newRow.insertCell(3).textContent = new Date().toLocaleDateString(); // Current date
+            newRow.insertCell(4).textContent = new Date().toLocaleTimeString(); // Current time
+            newRow.insertCell(5).textContent = mpesaCode;
+            newRow.insertCell(6).innerHTML = `<a href="uploads/receipt.html" target="_blank">View Receipt</a>`;
+            newRow.insertCell(7).textContent = (categoryObj.budget - totalExpenses - amount).toFixed(2);
+
+            // Update total expenses
+            totalExpenses += amount;
+
+            // Clear the form fields
+            document.getElementById('expense').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('mpesaCode').value = '';
+        });
+
+        // Populate categories dropdown
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.name;
+            option.text = category.name;
+            document.getElementById('category').appendChild(option);
+        });
+
+        // Function to view receipt
+        function viewReceipt(event) {
+            event.preventDefault();
+            window.location.href = 'uploads/receipt.html'; // Navigate to receipt.html
+        }
+
+        // Add event listener to the category dropdown
+        document.getElementById('category').addEventListener('change', function () {
+            const selectedCategory = this.value;
+            const categoryObj = categories.find(cat => cat.name === selectedCategory);
+            if (categoryObj) {
+                alert(`Budget remaining for ${selectedCategory}: ${categoryObj.budget - totalExpenses}`);
+            }
+        });
+
+        // Rest of your existing code...
+    </script>
+</body>
+</html>
